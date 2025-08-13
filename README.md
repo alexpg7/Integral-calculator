@@ -36,7 +36,7 @@ F(x)=&\frac A5x^5 + \frac B4 x^4 + \frac C3 x^3 + \frac D2 x^2 + Ex+K \\
 \end{align}
 ```
 
-The parameters $A,B,C,D,E,F$ of the function will be randomly generated. So, we make some functions that return all these types of data given a ``numpy`` linspace (which is the domain of the function). The type of functions that will be passed to the **NN** can be found and explored in this **desmos** project. There, you can check how the functions change when modifying their parameters.
+The parameters $A,B,C,D,E,F$ of the function will be randomly generated. So, we make some functions that return all these types of data given a ``numpy`` linspace (which is the domain of the function). The type of functions that will be passed to the **NN** can be found and explored in this [**desmos** project](https://www.desmos.com/calculator/ylei7lvlmw?lang=es). There, you can check how the functions change when modifying their parameters.
 
 ```Python
 def primitive(A, B, C, D, E, x):
@@ -167,5 +167,97 @@ To train it, we use the ``.fit`` method. We will feed the data in batches of 32 
 history = model.fit(d_train, y_train, epochs=20, batch_size = 32, verbose=True)
 ```
 
+We can plot the loss function in every step (epoch).
+
+```Python
+plt.xlabel('Epoch Number')
+plt.ylabel("Loss Magnitude")
+plt.plot(history.history['loss'])
+plt.yscale('log')
+plt.show()
+```
+
+<img src="./epochs.png" alt="Alt text" width="440" height="340"/>
+
+This is the typical shape of a gradient descent 😎. Now, let's evaluate the accuracy.
+
 ## 🧪Testing
 
+Lucky us, **TensorFlow** includes a method (``.evaluate``) to evaluate the **NN** with some testing data, the ``d_test,y_test`` we prepared previously.
+
+```Python
+test_error = model.evaluate(d_test, y_test, batch_size=32)
+print('Mean error:', test_error)
+```
+```output
+Mean error: 2.9877760421986865e-13
+```
+
+As we can see, the mean error is really low. But, we have to remember that this **NN** was trained to calculate polynomial areas. So, it is normal that does well at calulating other polynomial areas.
+
+At the end, a **NN** is an expert recognizing patterns, once you go further, it is expected to fail. So, let's test it with other non-polynomial functions!
+
+The three chosen will be these:
+
+```math
+\begin{align}
+f_1(x) =& e^{-x^2}\\
+f_2(x) =& \cos(x)\\
+f_3(x) =& x^2e^{x}
+\end{align}
+```
+
+So, we can test them with the model's predictions using ``.predict``. The areas have been calculated with the [**desmos** project](https://www.desmos.com/calculator/ylei7lvlmw?lang=es) we mentioned before.
+
+```Python
+def gauss(X):
+  return np.exp(-X **2)
+
+def cos(X):
+  return np.cos(X)
+
+def fun(X):
+  return X ** 3 * np.exp(X)
+
+y2 = np.array([gauss(x)])
+predict = model.predict(y2)[0][0]
+print("Gaussian")
+print("Predicted area:", predict, "\nExpected area:", 1.77241469652)
+print("Error:", (1.77241469652 - predict) ** 2, "\n")
+
+y2 = np.array([cos(x)])
+predict = model.predict(y2)[0][0]
+print("Cosine")
+print("Predicted area:", predict, "\nExpected area:", 0.28224001612)
+print("Error:", (0.28224001612 - predict) ** 2, "\n")
+
+y2 = np.array([fun(x)])
+predict = model.predict(y2)[0][0]
+print("Squared and exponential")
+print("Predicted area:", predict, "\nExpected area:", 99.5813044537)
+print("Error:", (99.5813044537 - predict) ** 2, "\n")
+```
+
+```output
+Gaussian
+Predicted area: 1.7523017 
+Expected area: 1.77241469652
+Error: 0.00040453242 
+
+
+Cosine
+Predicted area: 0.30594042 
+Expected area: 0.28224001612
+Error: 0.00056170975 
+
+Squared and exponential
+Predicted area: 241.72617 
+Expected area: 99.5813044537
+Error: 20205.164 
+```
+
+As it can be seen, it is pretty good at predicting the area of functions which [image](https://en.wikipedia.org/wiki/Image_(mathematics)) is the same as the dataset. However, once the function takes large values, the model **fails** (by far) to predict its area. Again, **NN**'s are experts in recognizing patterns, once they encounter a new case, they fail.
+
+## 😃Your turn
+
+Now it's your turn to experiment with different functions! You can use the[ **desmos** project](https://www.desmos.com/calculator/ylei7lvlmw?lang=es) as a guide to compare theoretical areas to the model's predictions.
